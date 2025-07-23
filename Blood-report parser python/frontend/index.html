@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Report Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.5/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .main-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-section {
+            padding: 60px;
+            text-align: center;
+            background: linear-gradient(45deg, #f8f9ff, #e8f4f8);
+        }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 60px 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            background: white;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .upload-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .loading-section {
+            padding: 60px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            padding: 0;
+        }
+
+        .summary-card {
+            padding: 40px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .summary-status {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .summary-text {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1px;
+            background: #e2e8f0;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .analysis-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #e2e8f0;
+        }
+
+        .test-result.normal {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .test-result.high {
+            border-left-color: #f56565;
+            background: #fffafa;
+        }
+
+        .test-result.low {
+            border-left-color: #ed8936;
+            background: #fffaf0;
+        }
+
+        .test-name {
+            font-weight: 600;
+            color: #333;
+            text-transform: capitalize;
+            margin-bottom: 5px;
+        }
+
+        .test-value {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .alert-item {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .alert-message {
+            color: #c53030;
+            font-weight: 500;
+        }
+
+        .recommendation-item {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-text {
+            color: #234e52;
+            line-height: 1.5;
+        }
+
+        .new-analysis-button {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+            margin: 20px;
+        }
+
+        .new-analysis-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+        }
+
+        .error-message {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .upload-section {
+                padding: 40px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useCallback, useRef } = React;
+
+        const FileUploadIcon = () => (
+            <svg className="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+        );
+
+        const ActivityIcon = () => (
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        );
+
+        const HeartIcon = () => (
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+        );
+
+        const HealthReportAnalyzer = () => {
+            const [file, setFile] = useState(null);
+            const [loading, setLoading] = useState(false);
+            const [results, setResults] = useState(null);
+            const [error, setError] = useState(null);
+            const [dragOver, setDragOver] = useState(false);
+            const fileInputRef = useRef(null);
+
+            const handleFileSelect = (selectedFile) => {
+                if (selectedFile) {
+                    setFile(selectedFile);
+                    setError(null);
+                }
+            };
+
+            const handleDragOver = useCallback((e) => {
+                e.preventDefault();
+                setDragOver(true);
+            }, []);
+
+            const handleDragLeave = useCallback((e) => {
+                e.preventDefault();
+                setDragOver(false);
+            }, []);
+
+            const handleDrop = useCallback((e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const droppedFile = e.dataTransfer.files[0];
+                handleFileSelect(droppedFile);
+            }, []);
+
+            const analyzeReport = async () => {
+                if (!file) return;
+
+                setLoading(true);
+                setError(null);
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await axios.post('http://localhost:5000/analyze', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                        timeout: 30000,
+                    });
+
+                    if (response.data.success) {
+                        setResults(response.data);
+                    } else {
+                        setError('Failed to analyze report');
+                    }
+                } catch (err) {
+                    console.error('Error analyzing report:', err);
+                    setError(err.response?.data?.error || 'Failed to connect to server. Make sure the backend is running on port 5000.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const resetAnalyzer = () => {
+                setFile(null);
+                setResults(null);
+                setError(null);
+                setLoading(false);
+            };
+
+            const getStatusColor = (status) => {
+                switch (status) {
+                    case 'Good': return '#48bb78';
+                    case 'Attention Needed': return '#ed8936';
+                    case 'Medical Consultation Recommended': return '#f56565';
+                    default: return '#667eea';
+                }
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🏥 AI Health Report Analyzer</h1>
+                        <p>Upload your medical report and get instant AI-powered health insights and recommendations</p>
+                    </div>
+
+                    <div className="main-card">
+                        {!file && !results && !loading && (
+                            <div className="upload-section">
+                                <div 
+                                    className={`upload-zone ${dragOver ? 'dragover' : ''}`}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <FileUploadIcon />
+                                    <div className="upload-text">Upload Your Health Report</div>
+                                    <div className="upload-subtext">
+                                        Drag & drop your medical report here, or click to browse
+                                        <br />
+                                        Supports PDF, PNG, JPG, JPEG formats
+                                    </div>
+                                    <button className="upload-button">
+                                        Choose File
+                                    </button>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        style={{ display: 'none' }}
+                                        accept=".pdf,.png,.jpg,.jpeg,.txt"
+                                        onChange={(e) => handleFileSelect(e.target.files[0])}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {file && !results && !loading && (
+                            <div className="upload-section">
+                                <div className="upload-zone">
+                                    <FileUploadIcon />
+                                    <div className="upload-text">Ready to Analyze</div>
+                                    <div className="upload-subtext">
+                                        File selected: {file.name}
+                                        <br />
+                                        Size: {(file.size / 1024 / 1024).toFixed(2)} MB
+                                    </div>
+                                    <button className="upload-button" onClick={analyzeReport}>
+                                        🔍 Analyze Report
+                                    </button>
+                                    <button 
+                                        className="upload-button" 
+                                        onClick={resetAnalyzer}
+                                        style={{ marginLeft: '10px', background: '#e2e8f0', color: '#333' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {loading && (
+                            <div className="loading-section">
+                                <div className="loading-spinner"></div>
+                                <h3>Analyzing Your Report...</h3>
+                                <p>Our AI is carefully reviewing your medical data and generating personalized insights.</p>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="error-message">
+                                <strong>Error:</strong> {error}
+                                <br />
+                                <button className="new-analysis-button" onClick={resetAnalyzer} style={{ marginTop: '15px' }}>
+                                    Try Again
+                                </button>
+                            </div>
+                        )}
+
+                        {results && (
+                            <div className="results-section">
+                                <div 
+                                    className="summary-card"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${getStatusColor(results.summary.overall_status)}, ${getStatusColor(results.summary.overall_status)}dd)`
+                                    }}
+                                >
+                                    <div className="summary-status">{results.summary.overall_status}</div>
+                                    <div className="summary-text">{results.summary.summary_text}</div>
+                                </div>
+
+                                <div className="stats-grid">
+                                    <div className="stat-item">
+                                        <div className="stat-value">{results.summary.total_tests}</div>
+                                        <div className="stat-label">Total Tests</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-value">{results.summary.normal_tests}</div>
+                                        <div className="stat-label">Normal</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-value">{results.summary.abnormal_tests}</div>
+                                        <div className="stat-label">Needs Attention</div>
+                                    </div>
+                                </div>
+
+                                <div className="analysis-grid">
+                                    <div className="analysis-section">
+                                        <h3>
+                                            <ActivityIcon />
+                                            Lab Results
+                                        </h3>
+                                        {Object.entries(results.analysis).map(([test, data]) => (
+                                            <div key={test} className={`test-result ${data.status}`}>
+                                                <div className="test-name">
+                                                    {test.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                                </div>
+                                                <div className="test-value">
+                                                    Value: {data.value} | Normal: {data.normal_range} | Status: {data.status}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        
+                                        {results.alerts.length > 0 && (
+                                            <>
+                                                <h4 style={{ marginTop: '30px', marginBottom: '15px', color: '#c53030' }}>
+                                                    ⚠️ Alerts
+                                                </h4>
+                                                {results.alerts.map((alert, index) => (
+                                                    <div key={index} className="alert-item">
+                                                        <div className="alert-message">{alert.message}</div>
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="analysis-section">
+                                        <h3>
+                                            <HeartIcon />
+                                            Health Recommendations
+                                        </h3>
+                                        {results.recommendations.map((recommendation, index) => (
+                                            <div key={index} className="recommendation-item">
+                                                <div className="recommendation-text">
+                                                    💡 {recommendation}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div style={{ textAlign: 'center', padding: '20px' }}>
+                                    <button className="new-analysis-button" onClick={resetAnalyzer}>
+                                        📋 Analyze New Report
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<HealthReportAnalyzer />, document.getElementById('root'));
+    </script>
+</body>
+</html>

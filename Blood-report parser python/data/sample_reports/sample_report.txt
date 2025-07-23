@@ -1,0 +1,5 @@
+Hemoglobin: 11.2
+Cholesterol: 220
+Glucose: 130
+Blood Pressure: 140/90
+BMI: 29

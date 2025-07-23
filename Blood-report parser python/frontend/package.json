@@ -1,0 +1,16 @@
+{
+  "name": "health-report-analyzer-frontend",
+  "version": "1.0.0",
+  "description": "AI Health Report Analyzer Frontend",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8080",
+    "build": "echo 'No build needed for this setup'",
+    "test": "echo 'Tests not configured'"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "axios": "^1.4.0"
+  }
+}
